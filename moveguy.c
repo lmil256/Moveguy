@@ -1,6 +1,6 @@
 #include <ncurses.h>
 
-const char *HEAD = " 0";
+const char *HEAD = " O";
 const char *BODY = "/|\\";
 const char *LEGS = "/ \\";
 const int GUY_WIDTH = 3;
