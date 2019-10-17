@@ -1,10 +1,28 @@
 #include <ncurses.h>
+#include <unistd.h>
 
-const char *HEAD = " 0";
-const char *BODY = "/|\\";
+const char *HEAD = "%c0%c";
+const char *BODY = "%c|%c";
 const char *LEGS = "/ \\";
 const int GUY_WIDTH = 3;
 const int GUY_HEIGHT = 3;
+const int TICK_DELAY = 5; // Delay between ticks (ms)
+const int STATE_DELAY = 500;
+
+void drawguy(int ypos, int xpos, int state) {
+    clear();
+    if (state == 0) {
+        mvprintw(ypos, xpos, HEAD, ' ', ' ');
+        mvprintw(ypos + 1, xpos, BODY, '/', '\\');
+    }
+    else {
+        mvprintw(ypos, xpos, HEAD, '\\', '/');
+        mvprintw(ypos + 1, xpos, BODY, ' ', ' ');
+    }
+
+    mvprintw(ypos + 2, xpos, LEGS);
+    refresh();
+}
 
 int main() {
     int winheight;  // Window height
@@ -12,9 +30,12 @@ int main() {
     int xpos;       // Guy's x-position (top left corner)
     int ypos;       // Guy's y-position (top left corner)
     int input = 0;  // Input character
+    int state = 0;  // 0: Arms down 1: Arms up
+    int ticks = 0;
 
     initscr();          // Initialize ncurses
     raw();              // Raw keyboard input
+    nodelay(stdscr, 1); // getch will not block execution
     noecho();           // Disable echoing
     keypad(stdscr, 1);  // Enable arrow key input
     curs_set(0);        // Hide cursor
@@ -23,22 +44,26 @@ int main() {
     // Center the guy
     ypos = (winheight - GUY_HEIGHT) / 2;
     xpos = (winwidth - GUY_WIDTH) / 2;
+    drawguy(ypos, xpos, state);
 
     while (input != 'q') {
-        clear();
-        mvprintw(ypos, xpos, HEAD);
-        mvprintw(ypos + 1, xpos, BODY);
-        mvprintw(ypos + 2, xpos, LEGS);
-        refresh();
         input = getch();
         if (input == KEY_LEFT && xpos != 0)
-            --xpos;
+            drawguy(ypos, --xpos, state);
         else if (input == KEY_RIGHT && xpos != winwidth - GUY_WIDTH)
-            ++xpos;
+            drawguy(ypos, ++xpos, state);
         else if (input == KEY_UP && ypos != 0)
-            --ypos;
+            drawguy(--ypos, xpos, state);
         else if (input == KEY_DOWN && ypos != winheight - GUY_HEIGHT)
-            ++ypos;
+            drawguy(++ypos, xpos, state);
+
+        usleep(TICK_DELAY * 1000);
+        if (++ticks == STATE_DELAY / TICK_DELAY) {
+            ticks = 0;
+            state = (state + 1) % 2;
+            drawguy(ypos, xpos, state);
+        }
+
     }
     
     endwin();
