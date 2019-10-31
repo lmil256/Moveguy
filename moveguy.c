@@ -76,6 +76,13 @@ int main() {
             drawguy(ypos, xpos, state); // Redraw the stickman
         }
 
+		// Update the screen size
+		getmaxyx(stdscr, winheight, winwidth);
+		// Clamp the stickman's position in case of window resize
+		if (ypos > winheight - GUY_HEIGHT)
+			ypos = winheight - GUY_HEIGHT;
+		if (xpos > winwidth - GUY_WIDTH)
+			xpos = winwidth - GUY_WIDTH;
     }
     
     endwin();   // End ncurses
